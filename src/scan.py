@@ -48,6 +48,7 @@ def get_tokens(source: str) -> list[Token]:
         if next_token is not None:
             tokens.append(next_token)
         current_pos = next_pos
+    return tokens
 
 
 def _scan_token(source: str, start_pos: int) -> tuple[Token, int, bool]:
@@ -59,40 +60,40 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, bool]:
     c = source[current_pos]
     current_pos += 1
 
-    if c == '(': tok = LEFT_PAREN
-    elif c == ')': tok = RIGHT_PAREN
-    elif c == '{': tok = LEFT_BRACE
-    elif c == '}': tok = RIGHT_BRACE
-    elif c == ',': tok = COMMA
-    elif c == '.': tok = DOT
-    elif c == '-': tok = MINUS
-    elif c == '+': tok = PLUS
-    elif c == ';': tok = SEMICOLON
-    elif c == '*': tok = STAR
+    if c == '(': tok = TokenType.LEFT_PAREN
+    elif c == ')': tok = TokenType.RIGHT_PAREN
+    elif c == '{': tok = TokenType.LEFT_BRACE
+    elif c == '}': tok = TokenType.RIGHT_BRACE
+    elif c == ',': tok = TokenType.COMMA
+    elif c == '.': tok = TokenType.DOT
+    elif c == '-': tok = TokenType.MINUS
+    elif c == '+': tok = TokenType.PLUS
+    elif c == ';': tok = TokenType.SEMICOLON
+    elif c == '*': tok = TokenType.STAR
     elif c == '!':
         if current_pos < len(source) and source[current_pos] == '=':
             current_pos += 1
-            tok = BANG_EQUAL
+            tok = TokenType.BANG_EQUAL
         else:
-            tok = BANG
+            tok = TokenType.BANG
     elif c == '=':
         if current_pos < len(source) and source[current_pos] == '=':
             current_pos += 1
-            tok = EQUAL_EQUAL
+            tok = TokenType.EQUAL_EQUAL
         else:
-            tok = EQUAL
+            tok = TokenType.EQUAL
     elif c == '<':
         if current_pos < len(source) and source[current_pos] == '=':
             current_pos += 1
-            tok = LESS_EQUAL
+            tok = TokenType.LESS_EQUAL
         else:
-            tok = LESS
+            tok = TokenType.LESS
     elif c == '>':
         if current_pos < len(source) and source[current_pos] == '=':
             current_pos += 1
-            tok = GREATER_EQUAL
+            tok = TokenType.GREATER_EQUAL
         else:
-            tok = GREATER
+            tok = TokenType.GREATER
     elif c == '/':
         if current_pos < len(source) and source[current_pos] == '/':
             # A comment goes until the end of the line.
@@ -100,7 +101,7 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, bool]:
                 current_pos += 1
             tok = None
         else:
-            tok = SLASH
+            tok = TokenType.SLASH
     elif c in (' ', '\r', '\t'):
         tok = None
     elif c == '\n':
