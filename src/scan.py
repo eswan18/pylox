@@ -7,6 +7,9 @@ class LoxScanError(Exception):
         self.msg = msg
         self.line_num = line_num
 
+    def __str__(self):
+        return f'{self.msg} on line {self.line_num}'
+
 TOKEN_TYPES = '''
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
     COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
@@ -50,6 +53,8 @@ def get_tokens(source: str) -> list[Token]:
             # The scan function doesn't know the line number so we have to provide it.
             exc.line_num = line_num
             errors.append(exc)
+            # Advance to the next token and keep going, to find all errors in one go.
+            current_pos += 1
             continue
         if next_token is not None:
             next_token.line_num = line_num
