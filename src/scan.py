@@ -1,8 +1,9 @@
 from enum import Enum
 from dataclasses import dataclass
+from typing import Optional
 
 class LoxScanError(Exception):
-    def __init__(msg: str, line_num: int):
+    def __init__(self, msg: str, line_num: Optional[int] = None):
         self.msg = msg
         self.line_num = line_num
 
@@ -29,8 +30,8 @@ kwd_map = {kwd: TokenType[kwd.upper()] for kwd in KEYWORDS.split()}
 class Token:
     token_type: TokenType
     lexeme: str
-    literal: str
-    line_num: int
+    literal: Optional[str]
+    line_num: Optional[int]
 
     def __str__(self) -> str:
         return f'{self.token_type} {self.lexeme} {self.literal}'
@@ -40,15 +41,27 @@ def get_tokens(source: str) -> list[Token]:
     line_num = 1
     current_pos = 0
     tokens = []
+    errors = []
     while current_pos < len(source):
         start_pos = current_pos
-        (next_token, next_pos, is_newline) = _scan_token(source, current_pos)
+        try:
+            (next_token, next_pos, is_newline) = _scan_token(source, current_pos)
+        except LoxScanError as exc:
+            # The scan function doesn't know the line number so we have to provide it.
+            exc.line_num = line_num
+            errors.append(exc)
+            continue
+        if next_token is not None:
+            next_token.line_num = line_num
+            tokens.append(next_token)
         if is_newline:
             line_num += 1
-        if next_token is not None:
-            tokens.append(next_token)
+        # Restart processing starting at the end of the token we found.
         current_pos = next_pos
-    return tokens
+
+    eof_token = Token(TokenType.EOF, '', None, line_num)
+    tokens.append(eof_token)
+    return tokens, errors
 
 
 def _scan_token(source: str, start_pos: int) -> tuple[Token, int, bool]:
@@ -60,62 +73,66 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, bool]:
     c = source[current_pos]
     current_pos += 1
 
-    if c == '(': tok = TokenType.LEFT_PAREN
-    elif c == ')': tok = TokenType.RIGHT_PAREN
-    elif c == '{': tok = TokenType.LEFT_BRACE
-    elif c == '}': tok = TokenType.RIGHT_BRACE
-    elif c == ',': tok = TokenType.COMMA
-    elif c == '.': tok = TokenType.DOT
-    elif c == '-': tok = TokenType.MINUS
-    elif c == '+': tok = TokenType.PLUS
-    elif c == ';': tok = TokenType.SEMICOLON
-    elif c == '*': tok = TokenType.STAR
+    if c == '(': token_type = TokenType.LEFT_PAREN
+    elif c == ')': token_type = TokenType.RIGHT_PAREN
+    elif c == '{': token_type = TokenType.LEFT_BRACE
+    elif c == '}': token_type = TokenType.RIGHT_BRACE
+    elif c == ',': token_type = TokenType.COMMA
+    elif c == '.': token_type = TokenType.DOT
+    elif c == '-': token_type = TokenType.MINUS
+    elif c == '+': token_type = TokenType.PLUS
+    elif c == ';': token_type = TokenType.SEMICOLON
+    elif c == '*': token_type = TokenType.STAR
     elif c == '!':
         if current_pos < len(source) and source[current_pos] == '=':
             current_pos += 1
-            tok = TokenType.BANG_EQUAL
+            token_type = TokenType.BANG_EQUAL
         else:
-            tok = TokenType.BANG
+            token_type = TokenType.BANG
     elif c == '=':
         if current_pos < len(source) and source[current_pos] == '=':
             current_pos += 1
-            tok = TokenType.EQUAL_EQUAL
+            token_type = TokenType.EQUAL_EQUAL
         else:
-            tok = TokenType.EQUAL
+            token_type = TokenType.EQUAL
     elif c == '<':
         if current_pos < len(source) and source[current_pos] == '=':
             current_pos += 1
-            tok = TokenType.LESS_EQUAL
+            token_type = TokenType.LESS_EQUAL
         else:
-            tok = TokenType.LESS
+            token_type = TokenType.LESS
     elif c == '>':
         if current_pos < len(source) and source[current_pos] == '=':
             current_pos += 1
-            tok = TokenType.GREATER_EQUAL
+            token_type = TokenType.GREATER_EQUAL
         else:
-            tok = TokenType.GREATER
+            token_type = TokenType.GREATER
     elif c == '/':
         if current_pos < len(source) and source[current_pos] == '/':
             # A comment goes until the end of the line.
             while current_pos < len(source) and source[current_pos] != '\n':
                 current_pos += 1
-            tok = None
+            token_type = None
         else:
-            tok = TokenType.SLASH
+            token_type = TokenType.SLASH
     elif c in (' ', '\r', '\t'):
-        tok = None
+        token_type = None
     elif c == '\n':
         # Return early, signaling that we need to increment the line counter.
         return (None, current_pos, True)  
     elif c == '"':
-        tok = _parse_string()
+        token_type = _parse_string()
     else:
         if c.isdigit():
-            _parse_number()
+            token_type = _parse_number()
         elif c.isalpha():
-            _parse_identifier()
+            token_type = _parse_identifier()
         else:
-            raise LoxScanError('Unexpected character', line_num)
+            raise LoxScanError('Unexpected character')
 
-    return (tok, current_pos, False)
+    if token_type is not None:
+        token = Token(token_type, source[start_pos:current_pos], None, None)
+    else:
+        token = None
+    return (token, current_pos, False)
 

@@ -2,7 +2,9 @@ import sys
 
 from .scan import get_tokens
 
-had_error = False
+class LoxError(Exception):
+    def __init__(self, return_code: int):
+        self.return_code = return_code
 
 def main(args: list[str]):
     if len(args) > 2:
@@ -16,30 +18,37 @@ def main(args: list[str]):
 def run_file(filename: str):
     with open(filename, 'rt') as f:
         contents = f.read()
-    run(contents)
-    if had_error:
-        sys.exit(65)
+    try:
+        run(contents)
+    except LoxError as exc:
+        sys.exit(exc.return_code)
 
 def run_prompt():
     global had_error
     while True:
-        line = input("> ")
-        run(line)
-        had_error = False
+        try:
+            line = input("> ")
+        except EOFError:
+            break
+
+        try:
+            run(line)
+        except LoxError:
+            continue
 
 def run(source: str):
-    tokens = get_tokens(source)
+    tokens, errors = get_tokens(source)
+    if errors:
+        for error in errors:
+            report(error)
+        raise LoxError(65)
     # For now, just print the tokens.
     for token in tokens:
         print(token)
 
-def error(line_num: int, message: str):
-    report(line_num, '', message)
-
-def report(line_num: int, where: str, message: str):
-    global had_error
-    print(f"[line {line_num}] Error {where}: {message}")
-    had_error = True
+def report(exception):
+    print(exception)
+    #print(f"[line {exception.line_num}] Error: {exception.message}")
 
 if __name__ == '__main__':
     main(sys.argv)
