@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Any
 
 class LoxScanError(Exception):
     def __init__(self, msg: str, line_num: Optional[int] = None):
@@ -48,19 +48,19 @@ def get_tokens(source: str) -> list[Token]:
     while current_pos < len(source):
         start_pos = current_pos
         try:
-            (next_token, next_pos, is_newline) = _scan_token(source, current_pos)
+            (next_token, next_pos, n_newlines) = _scan_token(source, current_pos)
         except LoxScanError as exc:
             # The scan function doesn't know the line number so we have to provide it.
             exc.line_num = line_num
             errors.append(exc)
             # Advance to the next token and keep going, to find all errors in one go.
             current_pos += 1
+            line_num += n_newlines
             continue
         if next_token is not None:
             next_token.line_num = line_num
             tokens.append(next_token)
-        if is_newline:
-            line_num += 1
+        line_num += n_newlines
         # Restart processing starting at the end of the token we found.
         current_pos = next_pos
 
@@ -69,14 +69,18 @@ def get_tokens(source: str) -> list[Token]:
     return tokens, errors
 
 
-def _scan_token(source: str, start_pos: int) -> tuple[Token, int, bool]:
+def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
     # We need to track not only where we started, but how far into the string we are.
     current_pos = start_pos
-    tok: Optional[Token] = None
+    token_type: Optional[Token] = None
+    token_value: Any = None
+
+    n_newlines = 0
 
     # Shift to get the next character.
     c = source[current_pos]
     current_pos += 1
+
 
     if c == '(': token_type = TokenType.LEFT_PAREN
     elif c == ')': token_type = TokenType.RIGHT_PAREN
@@ -124,9 +128,18 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, bool]:
         token_type = None
     elif c == '\n':
         # Return early, signaling that we need to increment the line counter.
-        return (None, current_pos, True)  
+        return (None, current_pos, 1)  
     elif c == '"':
-        token_type = _parse_string()
+        while current_pos < len(source) and source[current_pos] != '"':
+            if source[current_pos] == '\n':
+                n_newlines += 1
+            current_pos += 1
+        if current_pos == len(source):
+            raise LoxScanError('Unterminated string')
+        current_pos += 1
+        token_type = TokenType.STRING
+        # The string is bookended by quotes, which shouldn't be included in its value.
+        token_value = source[start_pos + 1 : current_pos - 1]
     else:
         if c.isdigit():
             token_type = _parse_number()
@@ -136,8 +149,8 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, bool]:
             raise LoxScanError('Unexpected character')
 
     if token_type is not None:
-        token = Token(token_type, source[start_pos:current_pos], None, None)
+        token = Token(token_type, source[start_pos:current_pos], token_value, None)
     else:
         token = None
-    return (token, current_pos, False)
+    return (token, current_pos, n_newlines)
 
