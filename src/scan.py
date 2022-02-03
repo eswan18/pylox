@@ -142,7 +142,17 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
         token_value = source[start_pos + 1 : current_pos - 1]
     else:
         if c.isdigit():
-            token_type = _parse_number()
+            while current_pos < len(source) and source[current_pos].isdigit():
+                current_pos += 1
+            # We may encounter a decimal number.
+            if current_pos < len(source) and source[current_pos] == '.':
+                if current_pos + 1 < len(source) and source[current_pos + 1].isdigit():
+                    current_pos += 1
+                    # Look over the numbers following the decimal.
+                    while current_pos < len(source) and source[current_pos].isdigit():
+                        current_pos += 1
+            token_type = TokenType.NUMBER
+            token_value = source[start_pos:current_pos]
         elif c.isalpha():
             token_type = _parse_identifier()
         else:
