@@ -1,6 +1,8 @@
 from enum import Enum
-from dataclasses import dataclass
 from typing import Optional, Any
+
+from ._token import Token, TokenType, keyword_map
+
 
 class LoxScanError(Exception):
     def __init__(self, msg: str, line_num: Optional[int] = None):
@@ -11,37 +13,7 @@ class LoxScanError(Exception):
         return f'{self.msg} on line {self.line_num}'
 
 
-TOKEN_TYPES = '''
-    LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
-    COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
-
-    BANG, BANG_EQUAL, EQUAL, EQUAL_EQUAL, GREATER, GREATER_EQUAL, LESS, LESS_EQUAL,
-
-    IDENTIFIER, STRING, NUMBER,
-
-    AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR, PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
-
-    EOF
-'''
-KEYWORDS = 'and class else false for fun if nil or print return super this true var while'
-
-token_types = [t.strip() for t in TOKEN_TYPES.split(',')]
-TokenType = Enum('TokenType', token_types)
-kwd_map = {kwd: TokenType[kwd.upper()] for kwd in KEYWORDS.split()}
-
-
-@dataclass
-class Token:
-    token_type: TokenType
-    lexeme: str
-    literal: Optional[str]
-    line_num: Optional[int]
-
-    def __str__(self) -> str:
-        return f'{self.token_type} {self.lexeme} {self.literal}'
-
-
-def get_tokens(source: str) -> list[Token]:
+def scan(source: str) -> list[Token]:
     line_num = 1
     current_pos = 0
     tokens = []
@@ -164,7 +136,7 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
                 current_pos += 1
             text = source[start_pos:current_pos]
             # Names that aren't keywords must be identifiers.
-            token_type = kwd_map.get(text, TokenType.IDENTIFIER)
+            token_type = keyword_map.get(text, TokenType.IDENTIFIER)
         else:
             raise LoxScanError('Unexpected character')
 

@@ -1,6 +1,6 @@
 import sys
 
-from .scan import get_tokens
+from ._scan import scan
 
 class LoxError(Exception):
     def __init__(self, return_code: int):
@@ -37,7 +37,7 @@ def run_prompt():
             continue
 
 def run(source: str):
-    tokens, errors = get_tokens(source)
+    tokens, errors = scan(source)
     if errors:
         for error in errors:
             report(error)
