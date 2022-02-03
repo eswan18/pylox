@@ -54,9 +54,10 @@ def get_tokens(source: str) -> list[Token]:
             # The scan function doesn't know the line number so we have to provide it.
             exc.line_num = line_num
             errors.append(exc)
+            if source[current_pos] == '\n':
+                line_num += 1
             # Advance to the next token and keep going, to find all errors in one go.
             current_pos += 1
-            line_num += n_newlines
             continue
         if next_token is not None:
             next_token.line_num = line_num

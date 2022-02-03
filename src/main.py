@@ -11,7 +11,7 @@ def main(args: list[str]):
         print("Usage: pylox [script]")
         sys.exit(64)
     elif len(args) == 2:
-        run_file(args[0])
+        run_file(args[1])
     else:
         run_prompt()
 
