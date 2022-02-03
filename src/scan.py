@@ -10,6 +10,7 @@ class LoxScanError(Exception):
     def __str__(self):
         return f'{self.msg} on line {self.line_num}'
 
+
 TOKEN_TYPES = '''
     LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
     COMMA, DOT, MINUS, PLUS, SEMICOLON, SLASH, STAR,
@@ -152,9 +153,17 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
                     while current_pos < len(source) and source[current_pos].isdigit():
                         current_pos += 1
             token_type = TokenType.NUMBER
-            token_value = source[start_pos:current_pos]
+            token_value = float(source[start_pos:current_pos])
         elif c.isalpha():
-            token_type = _parse_identifier()
+            # Identifiers and keywords.
+            while (
+                current_pos < len(source) and
+                (source[current_pos].isdigit() or source[current_pos].isalpha())
+            ):
+                current_pos += 1
+            text = source[start_pos:current_pos]
+            # Names that aren't keywords must be identifiers.
+            token_type = kwd_map.get(text, TokenType.IDENTIFIER)
         else:
             raise LoxScanError('Unexpected character')
 
