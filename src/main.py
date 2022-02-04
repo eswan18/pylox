@@ -43,7 +43,6 @@ def run(source: str):
         for error in scan_errors:
             report(error)
         raise LoxError(65)
-    print(tokens)
 
     ast, parse_errors = parse(tokens)
     if parse_errors:

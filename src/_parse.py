@@ -13,12 +13,13 @@ class LoxParseError(Exception):
     def __str__(self):
         return f'Parse Error: Found {self.token} but {self.msg}'
 
-def parse(tokens: list[Token]) -> tuple[Expr, list[LoxParseError]]:
+def parse(tokens: list[Token]) -> tuple[Optional[Expr], list[LoxParseError]]:
     # Parse the whole input as an expression.
-    ast, current_pos = parse_expr(tokens, 0)
-    #if current_pos != len(tokens):
-    #    errors.append(LoxParseError('Unable 
-    return ast, errors
+    try:
+        ast, current_pos = parse_expr(tokens, 0)
+    except LoxParseError as exc:
+        return None, [exc]
+    return ast, []
 
 def parse_expr(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     return parse_equality(tokens, current_pos)
@@ -69,18 +70,18 @@ def parse_unary(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
         return parse_primary(tokens, current_pos)
 
 def parse_primary(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
-    tok = tokens[current_pos]
-    if tok == TT.FALSE:
+    token = tokens[current_pos]
+    if token.token_type == TT.FALSE:
         return (Literal(False), current_pos + 1)
-    elif tok == TT.TRUE:
+    elif token.token_type == TT.TRUE:
         return (Literal(True), current_pos + 1)
-    elif tok == TT.NIL:
+    elif token.token_type == TT.NIL:
         return (Literal(None), current_pos + 1)
-    elif tok == TT.NIL:
+    elif token.token_type == TT.NIL:
         return (Literal(None), current_pos + 1)
-    elif tok in (TT.NUMBER, TT.STRING):
-        return (Literal(tok.literal), current_pos + 1)
-    elif tok == TT.LEFT_PAREN:
+    elif token.token_type in (TT.NUMBER, TT.STRING):
+        return (Literal(token.literal), current_pos + 1)
+    elif token.token_type == TT.LEFT_PAREN:
         expr, current_pos = parse_expression(tokens, current_pos + 1)
         parent, current_pos = consume(
             tokens,
@@ -90,7 +91,7 @@ def parse_primary(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
         )
         return Grouping(expr), current_pos
     else:
-        raise LoxParseError(tokens[current_pos], 'Expect expression')
+        raise LoxParseError(token, 'Expect expression')
 
 def consume(tokens: list[Token], current_pos: int, expected: Token, msg: str) -> tuple[Token, int]:
     if tokens[current_pos] == Token:
