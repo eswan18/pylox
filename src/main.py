@@ -53,7 +53,6 @@ def run(source: str):
 
 def report(exception):
     print(exception)
-    #print(f"[line {exception.line_num}] Error: {exception.message}")
 
 if __name__ == '__main__':
     main(sys.argv)
