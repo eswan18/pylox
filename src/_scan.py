@@ -10,10 +10,10 @@ class LoxScanError(Exception):
         self.line_num = line_num
 
     def __str__(self):
-        return f'{self.msg} on line {self.line_num}'
+        return f'Scan Error: {self.msg} on line {self.line_num}'
 
 
-def scan(source: str) -> list[Token]:
+def scan(source: str) -> tuple[list[Token], list[LoxScanError]]:
     line_num = 1
     current_pos = 0
     tokens = []
@@ -44,6 +44,18 @@ def scan(source: str) -> list[Token]:
 
 
 def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
+    '''
+    Scan the next token.
+
+    Returns
+    -------
+    next_token: Token
+        The next token found.
+    next_position: int
+        The position from which scanning should resume
+    n_newlines: int
+        The number of newlines found in the process of scanning this token.
+    '''
     # We need to track not only where we started, but how far into the string we are.
     current_pos = start_pos
     token_type: Optional[Token] = None
