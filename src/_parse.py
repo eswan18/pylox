@@ -11,22 +11,26 @@ class LoxParseError(Exception):
         self.msg = msg
 
     def __str__(self):
-        return f'Parse Error: Found {self.token} but {self.msg}'
+        if self.token.token_type == TT.EOF:
+            location = 'EOF'
+        else:
+            location = f"'{self.token.lexeme}'"
+        return f"[line {self.token.line_num}] Parse Error at {location}. {self.msg}"
 
 def parse(tokens: list[Token]) -> tuple[Optional[Expr], list[LoxParseError]]:
     # Parse the whole input as an expression.
     try:
-        ast, current_pos = parse_expr(tokens, 0)
+        ast, current_pos = parse_expression(tokens, 0)
     except LoxParseError as exc:
         return None, [exc]
     return ast, []
 
-def parse_expr(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
+def parse_expression(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     return parse_equality(tokens, current_pos)
 
 def parse_equality(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     expr, current_pos = parse_comparison(tokens, current_pos)
-    while tokens[current_pos] in (TT.BANG_EQUAL, TT.EQUAL_EQUAL):
+    while tokens[current_pos].token_type in (TT.BANG_EQUAL, TT.EQUAL_EQUAL):
         operator = tokens[current_pos]
         current_pos += 1
         right, current_pos = parse_comparison(tokens, current_pos)
@@ -35,7 +39,8 @@ def parse_equality(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
 
 def parse_comparison(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     expr, current_pos = parse_term(tokens, current_pos)
-    while tokens[current_pos] in (TT.GREATER, TT.GREATER_EQUAL, TT.LESS, TT.LESS_EQUAL):
+    tok_types = (TT.GREATER, TT.GREATER_EQUAL, TT.LESS, TT.LESS_EQUAL)
+    while tokens[current_pos].token_type in tok_types:
         operator = tokens[current_pos]
         current_pos += 1
         right, current_pos = parse_term(tokens, current_pos)
@@ -44,7 +49,7 @@ def parse_comparison(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
 
 def parse_term(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     expr, current_pos = parse_factor(tokens, current_pos)
-    while tokens[current_pos] in (TT.MINUS, TT.PLUS):
+    while tokens[current_pos].token_type in (TT.MINUS, TT.PLUS):
         operator = tokens[current_pos]
         current_pos += 1
         right, current_pos = parse_factor(tokens, current_pos)
@@ -53,7 +58,7 @@ def parse_term(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
 
 def parse_factor(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     expr, current_pos = parse_unary(tokens, current_pos)
-    while tokens[current_pos] in (TT.SLASH, TT.STAR):
+    while tokens[current_pos].token_type in (TT.SLASH, TT.STAR):
         operator = tokens[current_pos]
         current_pos += 1
         right, current_pos = parse_unary(tokens, current_pos)
@@ -61,7 +66,7 @@ def parse_factor(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     return expr, current_pos
 
 def parse_unary(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
-    if tokens[current_pos] in (TT.BANG, TT.MINUS):
+    if tokens[current_pos].token_type in (TT.BANG, TT.MINUS):
         operator = tokens[current_pos]
         current_pos += 1
         right, current_pos = parse_unary(tokens, current_pos)
@@ -83,7 +88,7 @@ def parse_primary(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
         return (Literal(token.literal), current_pos + 1)
     elif token.token_type == TT.LEFT_PAREN:
         expr, current_pos = parse_expression(tokens, current_pos + 1)
-        parent, current_pos = consume(
+        paren, current_pos = consume(
             tokens,
             current_pos,
             expected=TT.RIGHT_PAREN,
@@ -91,10 +96,10 @@ def parse_primary(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
         )
         return Grouping(expr), current_pos
     else:
-        raise LoxParseError(token, 'Expect expression')
+        raise LoxParseError(token, 'Expect expression.')
 
 def consume(tokens: list[Token], current_pos: int, expected: Token, msg: str) -> tuple[Token, int]:
-    if tokens[current_pos] == Token:
-        return (Token, current_pos + 1)
+    if tokens[current_pos].token_type == expected:
+        return (expected, current_pos + 1)
     else:
         raise LoxParseError(tokens[current_pos], msg)
