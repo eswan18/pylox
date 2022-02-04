@@ -10,7 +10,7 @@ class LoxScanError(Exception):
         self.line_num = line_num
 
     def __str__(self):
-        return f'Scan Error: {self.msg} on line {self.line_num}'
+        return f'[line {self.line_num}] Scan Error: {self.msg}'
 
 
 def scan(source: str) -> tuple[list[Token], list[LoxScanError]]:
@@ -121,7 +121,7 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
                 n_newlines += 1
             current_pos += 1
         if current_pos == len(source):
-            raise LoxScanError('Unterminated string')
+            raise LoxScanError('Unterminated string.')
         current_pos += 1
         token_type = TokenType.STRING
         # The string is bookended by quotes, which shouldn't be included in its value.
@@ -150,7 +150,7 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
             # Names that aren't keywords must be identifiers.
             token_type = keyword_map.get(text, TokenType.IDENTIFIER)
         else:
-            raise LoxScanError('Unexpected character')
+            raise LoxScanError('Unexpected character.')
 
     if token_type is not None:
         token = Token(token_type, source[start_pos:current_pos], token_value, None)
