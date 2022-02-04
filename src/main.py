@@ -1,6 +1,7 @@
 import sys
 
 from ._scan import scan
+from ._parse import parse
 
 class LoxError(Exception):
     def __init__(self, return_code: int):
@@ -37,14 +38,17 @@ def run_prompt():
             continue
 
 def run(source: str):
-    tokens, errors = scan(source)
-    if errors:
-        for error in errors:
+    tokens, scan_errors = scan(source)
+    if scan_errors:
+        for error in scan_errors:
             report(error)
         raise LoxError(65)
-    # For now, just print the tokens.
-    for token in tokens:
-        print(token)
+
+    ast, parse_errors = parse(tokens)
+    if parse_errors:
+        for error in parse_errors:
+            report(error)
+        raise LoxError(65)
 
 def report(exception):
     print(exception)
