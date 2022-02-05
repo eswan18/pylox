@@ -2,6 +2,7 @@ import sys
 
 from ._scan import scan
 from ._parse import parse
+from ._interpret import interpret
 from ._errors import LoxError
 
 
@@ -47,7 +48,10 @@ def run(source: str):
         for error in parse_errors:
             report(error)
         raise LoxError(65)
-    print(ast)
+    
+    runtime_error = interpret(ast)
+    if runtime_error is not None:
+        raise LoxError(70)
 
 def report(exception):
     print(exception)

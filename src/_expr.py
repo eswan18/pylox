@@ -1,13 +1,19 @@
 'Expression classes for the AST.'
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, is_dataclass
 from typing import Any
 
 from ._token import Token, TokenType
 
 class Expr(ABC):
-    ...
+
+    def __iter__(self):
+        # This enables assignment unpacking.
+        if is_dataclass(self):
+            return (getattr(self, field.name) for field in fields(self))
+        else:
+            raise NotImplementedError
 
     @abstractmethod
     def __str__(self):
