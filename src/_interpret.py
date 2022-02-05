@@ -9,7 +9,7 @@ from ._token import TokenType as TT
 def interpret(expr: Expr) -> Optional[LoxRuntimeError]:
     try:
         value = eval_expr(expr)
-        print(value)
+        print(stringify(value))
     except LoxRuntimeError as exc:
         return exc
 
@@ -46,7 +46,7 @@ def eval_binary(expr: Binary) -> object:
     right = eval_expr(raw_right)
 
 def check_operands_are_numbers(operator: Token, operands: list) -> None:
-    if not all(isinstance(op, (float, int)) for op in operator):
+    if not all(isinstance(op, (float, int)) for op in operands):
         if len(operands) > 1:
             msg = 'Operands must be numbers.'
         else:
@@ -64,6 +64,9 @@ def as_truthy(thing: object) -> bool:
 def stringify(thing: object) -> str:
     if thing is None:
         return 'nil'
+    if isinstance(thing, bool):
+        # Lox doesn't capitalize True/False but Python does.
+        return str(thing).lower()
     if isinstance(thing, (float, int)):
         text = str(thing)
         if text.endswith('.0'):
