@@ -2,10 +2,8 @@ import sys
 
 from ._scan import scan
 from ._parse import parse
+from ._errors import LoxError
 
-class LoxError(Exception):
-    def __init__(self, return_code: int):
-        self.return_code = return_code
 
 def main(args: list[str]):
     if len(args) > 2:

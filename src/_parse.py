@@ -2,20 +2,9 @@ from typing import Optional
 
 from ._token import Token
 from ._expr import Expr, Binary, Grouping, Literal, Unary
+from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
 from ._token import TokenType as TT
-
-class LoxParseError(Exception):
-    def __init__(self, token: Token, msg: str):
-        self.token = token
-        self.msg = msg
-
-    def __str__(self):
-        if self.token.token_type == TT.EOF:
-            location = 'EOF'
-        else:
-            location = f"'{self.token.lexeme}'"
-        return f"[line {self.token.line_num}] Parse Error at {location}. {self.msg}"
 
 def parse(tokens: list[Token]) -> tuple[Optional[Expr], list[LoxParseError]]:
     # Parse the whole input as an expression.
