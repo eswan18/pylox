@@ -51,6 +51,7 @@ def run(source: str):
     
     runtime_error = interpret(ast)
     if runtime_error is not None:
+        report(runtime_error)
         raise LoxError(70)
 
 def report(exception):

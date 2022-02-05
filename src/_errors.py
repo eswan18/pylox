@@ -26,4 +26,4 @@ class LoxRuntimeError(Exception):
         self.msg = msg
 
     def __str__(self):
-        return f'{self.msg}\n[line {self.token.line}]'
+        return f'{self.msg}\n[line {self.token.line_num}]'
