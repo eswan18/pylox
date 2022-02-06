@@ -43,13 +43,13 @@ def run(source: str):
             report(error)
         raise LoxError(65)
 
-    ast, parse_errors = parse(tokens)
+    statements, parse_errors = parse(tokens)
     if parse_errors:
         for error in parse_errors:
             report(error)
         raise LoxError(65)
     
-    runtime_error = interpret(ast)
+    runtime_error = interpret(statements)
     if runtime_error is not None:
         report(runtime_error)
         raise LoxError(70)

@@ -2,17 +2,41 @@ from typing import Optional
 
 from ._token import Token
 from ._expr import Expr, Binary, Grouping, Literal, Unary
+from ._stmt import Stmt, ExprStmt, PrintStmt
 from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
 from ._token import TokenType as TT
 
-def parse(tokens: list[Token]) -> tuple[Optional[Expr], list[LoxParseError]]:
-    # Parse the whole input as an expression.
-    try:
-        ast, current_pos = parse_expression(tokens, 0)
-    except LoxParseError as exc:
-        return None, [exc]
-    return ast, []
+def parse(tokens: list[Token]) -> tuple[list[Stmt], list[LoxParseError]]:
+    current_pos = 0
+    stmts: list[Stmt] = []
+    errors: list[LoxParseError] = []
+    while tokens[current_pos].token_type != TT.EOF:
+        try:
+            stmt, current_pos = parse_stmt(tokens, current_pos)
+        except LoxParseError as exc:
+            errors.append(exc)
+        else:
+            stmts.append(stmt)
+    return stmts, errors
+
+def parse_stmt(tokens: list[Token], current_pos: int) -> tuple[Stmt, int]:
+    if tokens[current_pos].token_type == TT.PRINT:
+        # Consume the PRINT token.
+        current_pos += 1
+        return parse_print_stmt(tokens, current_pos)
+    else:
+        return parse_expr_stmt(tokens, current_pos)
+
+def parse_expr_stmt(tokens: list[Token], current_pos: int) -> tuple[Stmt, int]:
+    expr, current_pos = parse_expression(tokens, current_pos)
+    _, current_pos = consume(tokens, current_pos, TT.SEMICOLON, "Expect ';' after expression.")
+    return ExprStmt(expr), current_pos
+
+def parse_print_stmt(tokens: list[Token], current_pos: int) -> tuple[Stmt, int]:
+    expr, current_pos = parse_expression(tokens, current_pos)
+    _, current_pos = consume(tokens, current_pos, TT.SEMICOLON, "Expect ';' after value.")
+    return PrintStmt(expr), current_pos
 
 def parse_expression(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     return parse_equality(tokens, current_pos)

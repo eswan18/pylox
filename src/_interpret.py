@@ -1,20 +1,30 @@
 from typing import Optional, cast
 
 from ._expr import Expr, Binary, Grouping, Literal, Unary
+from ._stmt import Stmt, ExprStmt, PrintStmt
 from ._errors import LoxRuntimeError
 from ._token import Token
 # We use it a lot, so an alias helps.
 from ._token import TokenType as TT
 
-def interpret(expr: Expr) -> Optional[LoxRuntimeError]:
+def interpret(statements: list[Stmt]) -> Optional[LoxRuntimeError]:
     try:
-        value = eval_expr(expr)
-        print(stringify(value))
+        for stmt in statements:
+            execute(stmt)
     except LoxRuntimeError as exc:
         return exc
 
+def execute(stmt: Stmt) -> None:
+    match stmt:
+        case ExprStmt(expr):
+            eval_expr(expr)
+        case PrintStmt(expr):
+            result = eval_expr(expr)
+            print(stringify(result))
+        case _:
+            raise RuntimeError
+
 def eval_expr(expr: Expr) -> object:
-    # From simplest to most complex.
     match expr:
         case Literal(value):
             return value
