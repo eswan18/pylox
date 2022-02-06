@@ -2,6 +2,7 @@
 
 from abc import ABC
 from dataclasses import dataclass
+from typing import Optional
 
 from ._token import Token, TokenType
 from ._expr import Expr
@@ -16,3 +17,8 @@ class ExprStmt(Stmt):
 @dataclass
 class PrintStmt(Stmt):
     expression: Expr
+
+@dataclass
+class VarStmt(Stmt):
+    token: Token
+    initializer: Optional[Expr]

@@ -1,24 +1,46 @@
 from typing import Optional
 
 from ._token import Token
-from ._expr import Expr, Binary, Grouping, Literal, Unary
-from ._stmt import Stmt, ExprStmt, PrintStmt
+from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable
+from ._stmt import Stmt, ExprStmt, PrintStmt, VarStmt
 from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
 from ._token import TokenType as TT
 
-def parse(tokens: list[Token]) -> tuple[list[Stmt], list[LoxParseError]]:
+def parse(tokens: list[Token]) -> tuple[list[Optional[Stmt]], list[LoxParseError]]:
     current_pos = 0
-    stmts: list[Stmt] = []
+    stmts: list[Optional[Stmt]] = []
     errors: list[LoxParseError] = []
     while tokens[current_pos].token_type != TT.EOF:
         try:
-            stmt, current_pos = parse_stmt(tokens, current_pos)
+            stmt, current_pos = parse_declaration(tokens, current_pos)
         except LoxParseError as exc:
             errors.append(exc)
         else:
             stmts.append(stmt)
     return stmts, errors
+
+def parse_declaration(tokens: list[Token], current_pos: int) -> tuple[Optional[Stmt], int]:
+    try:
+        if tokens[current_pos].token_type == TT.VAR:
+            # Consume the VAR token.
+            current_pos += 1
+            return parse_var_declaration(tokens, current_pos)
+        else:
+            return parse_stmt(tokens, current_pos)
+    except LoxParseError:
+        current_pos = sync_to_next_stmt(tokens, current_pos)
+        return None, current_pos
+
+def parse_var_declaration(tokens: list[Token], current_pos: int) -> tuple[Stmt, int]:
+    name_token, current_pos = consume(tokens, current_pos, TT.IDENTIFIER, "Expect variable name.")
+    initializer = None
+    if tokens[current_pos].token_type == TT.EQUAL:
+        # Consume the EQUAL token.
+        current_pos += 1
+        initializer, current_pos = parse_expression(tokens, current_pos)
+    _, current_pos = consume(tokens, current_pos, TT.SEMICOLON, "Expect ';' after variable declaration.")
+    return VarStmt(name_token, initializer), current_pos
 
 def parse_stmt(tokens: list[Token], current_pos: int) -> tuple[Stmt, int]:
     if tokens[current_pos].token_type == TT.PRINT:
@@ -95,8 +117,8 @@ def parse_primary(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
         return (Literal(True), current_pos + 1)
     elif token.token_type == TT.NIL:
         return (Literal(None), current_pos + 1)
-    elif token.token_type == TT.NIL:
-        return (Literal(None), current_pos + 1)
+    elif token.token_type == TT.IDENTIFIER:
+        return (Variable(tokens[current_pos]), current_pos + 1)
     elif token.token_type in (TT.NUMBER, TT.STRING):
         return (Literal(token.literal), current_pos + 1)
     elif token.token_type == TT.LEFT_PAREN:
@@ -113,6 +135,6 @@ def parse_primary(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
 
 def consume(tokens: list[Token], current_pos: int, expected: Token, msg: str) -> tuple[Token, int]:
     if tokens[current_pos].token_type == expected:
-        return (expected, current_pos + 1)
+        return (tokens[current_pos], current_pos + 1)
     else:
         raise LoxParseError(tokens[current_pos], msg)

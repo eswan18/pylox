@@ -53,6 +53,13 @@ class Unary(Expr):
     def __str__(self):
         return f'({self.operator.lexeme} {self.right})'
 
+@dataclass
+class Variable(Expr):
+    token: Token
+
+    def __str__(self):
+        return self.token.lexeme
+
 if __name__ == "__main__":
     print(
         Binary(

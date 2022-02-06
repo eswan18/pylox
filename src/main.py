@@ -2,7 +2,7 @@ import sys
 
 from ._scan import scan
 from ._parse import parse
-from ._interpret import interpret
+from ._interpret import Interpreter
 from ._errors import LoxError
 
 
@@ -18,13 +18,15 @@ def main(args: list[str]):
 def run_file(filename: str):
     with open(filename, 'rt') as f:
         contents = f.read()
+    interpreter = Interpreter()
     try:
-        run(contents)
+        run(contents, interpreter)
     except LoxError as exc:
         sys.exit(exc.return_code)
 
 def run_prompt():
     global had_error
+    interpreter = Interpreter()
     while True:
         try:
             line = input("> ")
@@ -32,11 +34,11 @@ def run_prompt():
             break
 
         try:
-            run(line)
+            run(line, interpreter)
         except LoxError:
             continue
 
-def run(source: str):
+def run(source: str, interpreter: Interpreter):
     tokens, scan_errors = scan(source)
     if scan_errors:
         for error in scan_errors:
@@ -49,7 +51,7 @@ def run(source: str):
             report(error)
         raise LoxError(65)
     
-    runtime_error = interpret(statements)
+    runtime_error = interpreter.interpret(statements)
     if runtime_error is not None:
         report(runtime_error)
         raise LoxError(70)
