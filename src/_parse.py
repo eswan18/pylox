@@ -16,21 +16,18 @@ def parse(tokens: list[Token]) -> tuple[list[Optional[Stmt]], list[LoxParseError
             stmt, current_pos = parse_declaration(tokens, current_pos)
         except LoxParseError as exc:
             errors.append(exc)
+            current_pos = synchronize(tokens, current_pos+1)
         else:
             stmts.append(stmt)
     return stmts, errors
 
 def parse_declaration(tokens: list[Token], current_pos: int) -> tuple[Optional[Stmt], int]:
-    try:
-        if tokens[current_pos].token_type == TT.VAR:
-            # Consume the VAR token.
-            current_pos += 1
-            return parse_var_declaration(tokens, current_pos)
-        else:
-            return parse_stmt(tokens, current_pos)
-    except LoxParseError:
-        current_pos = sync_to_next_stmt(tokens, current_pos)
-        return None, current_pos
+    if tokens[current_pos].token_type == TT.VAR:
+        # Consume the VAR token.
+        current_pos += 1
+        return parse_var_declaration(tokens, current_pos)
+    else:
+        return parse_stmt(tokens, current_pos)
 
 def parse_var_declaration(tokens: list[Token], current_pos: int) -> tuple[Stmt, int]:
     name_token, current_pos = consume(tokens, current_pos, TT.IDENTIFIER, "Expect variable name.")
@@ -138,3 +135,13 @@ def consume(tokens: list[Token], current_pos: int, expected: Token, msg: str) ->
         return (tokens[current_pos], current_pos + 1)
     else:
         raise LoxParseError(tokens[current_pos], msg)
+
+def synchronize(tokens: list[Token], current_pos: int) -> int:
+    current_pos += 1
+    while tokens[current_pos].token_type != TT.EOF:
+        if tokens[current_pos-1] == TT.SEMICOLON:
+            return current_pos
+        if tokens[current_pos].token_type in (TT.CLASS, TT.FUN, TT.VAR, TT.FOR, TT.IF, TT.WHILE, TT.PRINT, TT.RETURN):
+            return current_pos
+        current_pos += 1
+    return current_pos
