@@ -20,6 +20,15 @@ class Expr(ABC):
         ...
 
 @dataclass
+class Assignment(Expr):
+    token: Token
+    value: Expr
+
+    def __str__(self):
+        return f'{self.token.lexeme} = {self.value}'
+
+
+@dataclass
 class Binary(Expr):
     left: Expr
     operator: Token

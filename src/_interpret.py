@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable
+from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable, Assignment
 from ._stmt import Stmt, ExprStmt, PrintStmt, VarStmt
 from ._environment import Environment
 from ._errors import LoxRuntimeError
@@ -43,10 +43,18 @@ class Interpreter:
                 return self.eval_unary(expr)
             case Binary():
                 return self.eval_binary(expr)
+            case Assignment():
+                return self.eval_assignment(expr)
             case Variable(token):
+                # Note that this doesn't delegate to a function; simple enough to do here.
                 return self.environment.get(token)
             case _:
                 raise RuntimeError
+
+    def eval_assignment(self, expr: Assignment) -> object:
+        value = self.eval_expr(expr.value)
+        self.environment.assign(expr.token, value)
+        return value
 
     def eval_unary(self, expr: Unary) -> object:
         operator, raw_right = expr

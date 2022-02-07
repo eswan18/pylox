@@ -1,7 +1,7 @@
 from typing import Optional
 
 from ._token import Token
-from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable
+from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable, Assignment
 from ._stmt import Stmt, ExprStmt, PrintStmt, VarStmt
 from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
@@ -58,7 +58,23 @@ def parse_print_stmt(tokens: list[Token], current_pos: int) -> tuple[Stmt, int]:
     return PrintStmt(expr), current_pos
 
 def parse_expression(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
-    return parse_equality(tokens, current_pos)
+    return parse_assignment(tokens, current_pos)
+
+def parse_assignment(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
+    expr, current_pos = parse_equality(tokens, current_pos)
+    if tokens[current_pos].token_type == TT.EQUAL:
+        # If this is indeed an assignment.
+        equals = tokens[current_pos]
+        current_pos += 1
+        value, current_pos = parse_assignment(tokens, current_pos)
+        # Only certain things are valid l-values.
+        if isinstance(expr, Variable):
+            return Assignment(expr.token, value), current_pos
+        else:
+            raise LoxParseError(expr.token, "Invalid assignment target.")
+    else:
+        # If this is not an assignment expression.
+        return expr, current_pos
 
 def parse_equality(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     expr, current_pos = parse_comparison(tokens, current_pos)
