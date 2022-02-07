@@ -1,7 +1,7 @@
 import sys
 
 from ._scan import scan
-from ._parse import parse
+from ._parse import Parser
 from ._interpret import Interpreter
 from ._errors import LoxError
 
@@ -45,9 +45,10 @@ def run(source: str, interpreter: Interpreter):
             report(error)
         raise LoxError(65)
 
-    statements, parse_errors = parse(tokens)
-    if parse_errors:
-        for error in parse_errors:
+    parser = Parser()
+    statements = parser.parse(tokens)
+    if len(parser.errors) >= 1:
+        for error in parser.errors:
             report(error)
         raise LoxError(65)
     
