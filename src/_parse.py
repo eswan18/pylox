@@ -65,13 +65,14 @@ def parse_assignment(tokens: list[Token], current_pos: int) -> tuple[Expr, int]:
     if tokens[current_pos].token_type == TT.EQUAL:
         # If this is indeed an assignment.
         equals = tokens[current_pos]
+        equals_pos = current_pos
         current_pos += 1
         value, current_pos = parse_assignment(tokens, current_pos)
         # Only certain things are valid l-values.
         if isinstance(expr, Variable):
             return Assignment(expr.token, value), current_pos
         else:
-            raise LoxParseError(expr.token, "Invalid assignment target.")
+            raise LoxParseError(tokens[equals_pos], "Invalid assignment target.")
     else:
         # If this is not an assignment expression.
         return expr, current_pos
