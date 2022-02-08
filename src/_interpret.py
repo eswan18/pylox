@@ -1,7 +1,7 @@
 from typing import Optional, cast
 
 from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable, Assignment
-from ._stmt import Stmt, ExprStmt, PrintStmt, VarStmt
+from ._stmt import Stmt, ExprStmt, PrintStmt, VarStmt, BlockStmt
 from ._environment import Environment
 from ._errors import LoxRuntimeError
 from ._token import Token
@@ -30,8 +30,22 @@ class Interpreter:
             case VarStmt(token, initializer):
                 value = self.eval_expr(initializer) if initializer is not None else None
                 self.environment.define(token.lexeme, value)
+            case BlockStmt(statements):
+                self.execute_block(statements, Environment(enclosing=self.environment))
             case _:
                 raise RuntimeError
+
+    def execute_block(self, stmts: list[Stmt], environment: Environment) -> None:
+        # Hold on to the current environment so we can reset after running the block.
+        previous = self.environment
+        try:
+            self.environment = environment
+            for stmt in stmts:
+                self.execute(stmt)
+        finally:
+            # It's vital to reset the current environment even if we run into an error
+            # in the block.
+            self.environment = previous
 
     def eval_expr(self, expr: Expr) -> object:
         match expr:
