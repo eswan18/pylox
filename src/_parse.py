@@ -2,7 +2,7 @@ from typing import Optional
 
 from ._token import Token
 from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable, Assignment
-from ._stmt import Stmt, ExprStmt, PrintStmt, VarStmt
+from ._stmt import Stmt, ExprStmt, PrintStmt, VarStmt, BlockStmt
 from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
 from ._token import TokenType as TT
@@ -64,6 +64,11 @@ class Parser:
             # Consume the PRINT token.
             current_pos += 1
             return self.parse_print_stmt(tokens, current_pos)
+        elif tokens[current_pos].token_type == TT.LEFT_BRACE:
+            # Consume the LEFT BRACE token.
+            current_pos += 1
+            block, current_pos = self.parse_block(tokens, current_pos)
+            return BlockStmt(block), current_pos
         else:
             return self.parse_expr_stmt(tokens, current_pos)
 
@@ -75,6 +80,25 @@ class Parser:
         expr, current_pos = self.parse_expression(tokens, current_pos)
         _, current_pos = self.consume(tokens, current_pos, TT.SEMICOLON, "Expect ';' after expression.")
         return ExprStmt(expr), current_pos
+
+    def parse_block(
+        self,
+        tokens: list[Token],
+        current_pos: int,
+    ) -> tuple[list[Stmt], int]:
+        stmts: list[Stmt] = []
+
+        while tokens[current_pos].token_type not in (TT.RIGHT_BRACE, TT.EOF):
+            declaration, current_pos = self.parse_declaration(tokens, current_pos)
+            stmts.append(declaration)
+
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.RIGHT_BRACE,
+            "Expect '}' after block."
+        )
+        return stmts, current_pos
 
     def parse_print_stmt(
         self,

@@ -19,6 +19,10 @@ class PrintStmt(Stmt):
     expression: Expr
 
 @dataclass
+class BlockStmt(Stmt):
+    statements: list[Stmt]
+
+@dataclass
 class VarStmt(Stmt):
     token: Token
     initializer: Optional[Expr]
