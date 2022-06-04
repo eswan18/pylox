@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable, Assignment
+from ._expr import Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment
 from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, BlockStmt
 from ._environment import Environment
 from ._errors import LoxRuntimeError
@@ -59,6 +59,8 @@ class Interpreter:
         match expr:
             case Literal(value):
                 return value
+            case Logical():
+                return self.eval_logical(expr)
             case Grouping(inner_expr):
                 return self.eval_expr(inner_expr)
             case Unary():
@@ -77,6 +79,19 @@ class Interpreter:
         value = self.eval_expr(expr.value)
         self.environment.assign(expr.token, value)
         return value
+
+    def eval_logical(self, expr: Logical) -> object:
+        left, operator, right = expr
+        left_val = self.eval_expr(left)
+
+        if operator.token_type == TT.OR:
+            if is_truthy(left_val):
+                return left_val
+        else:  # operator.token_type == TT.AND
+            if not is_truthy(left_val):
+                return left_val
+        
+        return self.eval_expr(right)
 
     def eval_unary(self, expr: Unary) -> object:
         operator, raw_right = expr

@@ -1,7 +1,7 @@
 from typing import Optional
 
 from ._token import Token
-from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable, Assignment
+from ._expr import Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment
 from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, BlockStmt
 from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
@@ -141,7 +141,7 @@ class Parser:
         tokens: list[Token],
         current_pos: int
     ) -> tuple[Expr, int]:
-        expr, current_pos = self.parse_equality(tokens, current_pos)
+        expr, current_pos = self.parse_or(tokens, current_pos)
         if tokens[current_pos].token_type == TT.EQUAL:
             # If this is indeed an assignment.
             equals = tokens[current_pos]
@@ -158,6 +158,32 @@ class Parser:
         else:
             # If this is not an assignment expression.
             return expr, current_pos
+
+    def parse_or(
+        self,
+        tokens: list[Token],
+        current_pos: int,
+    ) -> tuple[Expr, int]:
+        expr, current_pos = self.parse_and(tokens, current_pos)
+        while tokens[current_pos].token_type == TT.OR:
+            operator = tokens[current_pos]
+            current_pos += 1
+            right, current_pos = self.parse_and(tokens, current_pos)
+            expr = Logical(expr, operator, right)
+        return expr, current_pos
+
+    def parse_and(
+        self,
+        tokens: list[Token],
+        current_pos: int,
+    ) -> tuple[Expr, int]:
+        expr, current_pos = self.parse_equality(tokens, current_pos)
+        while tokens[current_pos].token_type == TT.AND:
+            operator = tokens[current_pos]
+            current_pos += 1
+            right, current_pos = self.parse_equality(tokens, current_pos)
+            expr = Logical(expr, operator, right)
+        return expr, current_pos
 
     def parse_equality(
         self,

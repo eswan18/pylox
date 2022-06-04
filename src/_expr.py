@@ -55,6 +55,15 @@ class Literal(Expr):
             return str(self.value)
 
 @dataclass
+class Logical(Expr):
+    left: Expr
+    operator: Token
+    right: Expr
+
+    def __str__(self):
+        return f'({self.operator.lexeme} {self.left} {self.right})'
+
+@dataclass
 class Unary(Expr):
     operator: Token
     right: Expr
