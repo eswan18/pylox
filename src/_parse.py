@@ -250,6 +250,10 @@ class Parser:
         tokens: list[Token],
         current_pos: int
     ) -> int:
+        # If we're already at the end of the input, no need to synchronize.
+        if tokens[current_pos].token_type == TT.EOF:
+            return current_pos
+
         current_pos += 1
         while tokens[current_pos].token_type != TT.EOF:
             if tokens[current_pos-1] == TT.SEMICOLON:
