@@ -7,11 +7,11 @@ from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
 from ._token import TokenType as TT
 
+
 class Parser:
 
     def __init__(self):
-        self.errors: List[LoxParseError] = []
-
+        self.errors: list[LoxParseError] = []
 
     def parse(
         self,
@@ -33,7 +33,7 @@ class Parser:
         self,
         tokens: list[Token],
         current_pos: int,
-    ) -> tuple[Optional[Stmt], int]:
+    ) -> tuple[Stmt, int]:
         if tokens[current_pos].token_type == TT.VAR:
             # Consume the VAR token.
             current_pos += 1
@@ -81,9 +81,9 @@ class Parser:
         tokens: list[Token],
         current_pos: int,
     ) -> tuple[Stmt, int]:
-        _, current_pos = self.consume(tokens, current_pos, TT.LEFT_PAREN, "Expect '(' after 'if'.");
+        _, current_pos = self.consume(tokens, current_pos, TT.LEFT_PAREN, "Expect '(' after 'if'.")
         condition, current_pos = self.parse_expression(tokens, current_pos)
-        _, current_pos = self.consume(tokens, current_pos, TT.RIGHT_PAREN, "Expect ')' after if condition.");
+        _, current_pos = self.consume(tokens, current_pos, TT.RIGHT_PAREN, "Expect ')' after if condition.")
         then_stmt, current_pos = self.parse_stmt(tokens, current_pos)
         else_stmt = None
         if tokens[current_pos].token_type == TT.ELSE:
@@ -144,7 +144,6 @@ class Parser:
         expr, current_pos = self.parse_or(tokens, current_pos)
         if tokens[current_pos].token_type == TT.EQUAL:
             # If this is indeed an assignment.
-            equals = tokens[current_pos]
             equals_pos = current_pos
             current_pos += 1
             value, current_pos = self.parse_assignment(tokens, current_pos)
@@ -154,7 +153,7 @@ class Parser:
             else:
                 # Note that we don't *raise* the error, halting parsing; we just raise it later.
                 self.errors.append(LoxParseError(tokens[equals_pos], "Invalid assignment target."))
-                return expr, current_pos;
+                return expr, current_pos
         else:
             # If this is not an assignment expression.
             return expr, current_pos

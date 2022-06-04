@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import cast
 
 from ._expr import Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment
 from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, BlockStmt
@@ -8,17 +8,20 @@ from ._token import Token
 # We use it a lot, so an alias helps.
 from ._token import TokenType as TT
 
+
 class Interpreter:
 
     def __init__(self):
         self.environment = Environment()
 
-    def interpret(self, statements: list[Stmt]) -> Optional[LoxRuntimeError]:
+    def interpret(self, statements: list[Stmt]) -> LoxRuntimeError | None:
         try:
             for stmt in statements:
                 self.execute(stmt)
         except LoxRuntimeError as exc:
             return exc
+        else:
+            return None
 
     def execute(self, stmt: Stmt) -> None:
         match stmt:
@@ -90,7 +93,6 @@ class Interpreter:
         else:  # operator.token_type == TT.AND
             if not is_truthy(left_val):
                 return left_val
-        
         return self.eval_expr(right)
 
     def eval_unary(self, expr: Unary) -> object:
@@ -147,6 +149,7 @@ class Interpreter:
             case _:
                 raise RuntimeError
 
+
 def check_operands_are_numbers(operator: Token, *operands: object) -> None:
     if not all(isinstance(op, (float, int)) for op in operands):
         if len(operands) > 1:
@@ -155,6 +158,7 @@ def check_operands_are_numbers(operator: Token, *operands: object) -> None:
             msg = 'Operand must be a number.'
         raise LoxRuntimeError(operator, msg)
 
+
 def is_truthy(thing: object) -> bool:
     if thing is None:
         return False
@@ -162,6 +166,7 @@ def is_truthy(thing: object) -> bool:
         return thing
     else:
         return True
+
 
 def stringify(thing: object) -> str:
     if thing is None:

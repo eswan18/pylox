@@ -1,11 +1,11 @@
 from enum import Enum
-from typing import Optional, Any
+from typing import Any
 
 from ._token import Token, TokenType, keyword_map
 
 
 class LoxScanError(Exception):
-    def __init__(self, msg: str, line_num: Optional[int] = None):
+    def __init__(self, msg: str, line_num: int | None = None):
         self.msg = msg
         self.line_num = line_num
 
@@ -19,7 +19,6 @@ def scan(source: str) -> tuple[list[Token], list[LoxScanError]]:
     tokens = []
     errors = []
     while current_pos < len(source):
-        start_pos = current_pos
         try:
             (next_token, next_pos, n_newlines) = _scan_token(source, current_pos)
         except LoxScanError as exc:
@@ -58,7 +57,7 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
     '''
     # We need to track not only where we started, but how far into the string we are.
     current_pos = start_pos
-    token_type: Optional[Token] = None
+    token_type: Token | None = None
     token_value: Any = None
 
     n_newlines = 0
@@ -66,7 +65,6 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
     # Shift to get the next character.
     c = source[current_pos]
     current_pos += 1
-
 
     if c == '(': token_type = TokenType.LEFT_PAREN
     elif c == ')': token_type = TokenType.RIGHT_PAREN
@@ -114,7 +112,7 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
         token_type = None
     elif c == '\n':
         # Return early, signaling that we need to increment the line counter.
-        return (None, current_pos, 1)  
+        return (None, current_pos, 1)
     elif c == '"':
         while current_pos < len(source) and source[current_pos] != '"':
             if source[current_pos] == '\n':
@@ -125,7 +123,7 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
         current_pos += 1
         token_type = TokenType.STRING
         # The string is bookended by quotes, which shouldn't be included in its value.
-        token_value = source[start_pos + 1 : current_pos - 1]
+        token_value = source[start_pos + 1 : current_pos - 1]  # noqa
     else:
         if c.isdigit():
             while current_pos < len(source) and source[current_pos].isdigit():
@@ -157,4 +155,3 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
     else:
         token = None
     return (token, current_pos, n_newlines)
-

@@ -4,15 +4,18 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Optional
 
-from ._token import Token, TokenType
+from ._token import Token
 from ._expr import Expr
+
 
 class Stmt(ABC):
     ...
 
+
 @dataclass
 class ExprStmt(Stmt):
     expression: Expr
+
 
 @dataclass
 class IfStmt(Stmt):
@@ -20,16 +23,18 @@ class IfStmt(Stmt):
     then_branch: Stmt
     else_branch: Stmt | None = None
 
+
 @dataclass
 class PrintStmt(Stmt):
     expression: Expr
+
 
 @dataclass
 class BlockStmt(Stmt):
     statements: list[Stmt]
 
+
 @dataclass
 class VarStmt(Stmt):
     token: Token
     initializer: Optional[Expr]
-

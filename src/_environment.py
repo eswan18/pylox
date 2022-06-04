@@ -3,6 +3,7 @@ from __future__ import annotations
 from ._token import Token
 from ._errors import LoxRuntimeError
 
+
 class Environment:
 
     def __init__(self, enclosing: Environment = None):
@@ -22,7 +23,7 @@ class Environment:
             return self.enclosing.get(token)
         else:
             raise LoxRuntimeError(token, f"Undefined variable '{name}'.")
-    
+
     def assign(self, token: Token, value: object) -> None:
         name = token.lexeme
         if name in self.values:

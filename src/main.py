@@ -15,6 +15,7 @@ def main(args: list[str]):
     else:
         run_prompt()
 
+
 def run_file(filename: str):
     with open(filename, 'rt') as f:
         contents = f.read()
@@ -23,6 +24,7 @@ def run_file(filename: str):
         run(contents, interpreter)
     except LoxError as exc:
         sys.exit(exc.return_code)
+
 
 def run_prompt():
     global had_error
@@ -38,6 +40,7 @@ def run_prompt():
         except LoxError:
             continue
 
+
 def run(source: str, interpreter: Interpreter):
     tokens, scan_errors = scan(source)
     if scan_errors:
@@ -51,14 +54,16 @@ def run(source: str, interpreter: Interpreter):
         for error in parser.errors:
             report(error)
         raise LoxError(65)
-    
+
     runtime_error = interpreter.interpret(statements)
     if runtime_error is not None:
         report(runtime_error)
         raise LoxError(70)
 
+
 def report(exception):
     print(exception)
+
 
 if __name__ == '__main__':
     main(sys.argv)
