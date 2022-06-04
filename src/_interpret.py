@@ -1,7 +1,7 @@
 from typing import Optional, cast
 
 from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable, Assignment
-from ._stmt import Stmt, ExprStmt, PrintStmt, VarStmt, BlockStmt
+from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, BlockStmt
 from ._environment import Environment
 from ._errors import LoxRuntimeError
 from ._token import Token
@@ -32,6 +32,8 @@ class Interpreter:
                 self.environment.define(token.lexeme, value)
             case BlockStmt(statements):
                 self.execute_block(statements, Environment(enclosing=self.environment))
+            case IfStmt():
+                self.execute_if(stmt)
             case _:
                 raise RuntimeError
 
@@ -46,6 +48,12 @@ class Interpreter:
             # It's vital to reset the current environment even if we run into an error
             # in the block.
             self.environment = previous
+
+    def execute_if(self, stmt: IfStmt) -> None:
+        if is_truthy(self.eval_expr(stmt.condition)):
+            self.execute(stmt.then_branch)
+        elif stmt.else_branch is not None:
+            self.execute(stmt.else_branch)
 
     def eval_expr(self, expr: Expr) -> object:
         match expr:

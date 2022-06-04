@@ -15,6 +15,12 @@ class ExprStmt(Stmt):
     expression: Expr
 
 @dataclass
+class IfStmt(Stmt):
+    condition: Expr
+    then_branch: Stmt
+    else_branch: Stmt | None = None
+
+@dataclass
 class PrintStmt(Stmt):
     expression: Expr
 
@@ -26,3 +32,4 @@ class BlockStmt(Stmt):
 class VarStmt(Stmt):
     token: Token
     initializer: Optional[Expr]
+

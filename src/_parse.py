@@ -2,7 +2,7 @@ from typing import Optional
 
 from ._token import Token
 from ._expr import Expr, Binary, Grouping, Literal, Unary, Variable, Assignment
-from ._stmt import Stmt, ExprStmt, PrintStmt, VarStmt, BlockStmt
+from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, BlockStmt
 from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
 from ._token import TokenType as TT
@@ -60,7 +60,11 @@ class Parser:
         tokens: list[Token],
         current_pos: int
     ) -> tuple[Stmt, int]:
-        if tokens[current_pos].token_type == TT.PRINT:
+        if tokens[current_pos].token_type == TT.IF:
+            # Consume the IF token.
+            current_pos += 1
+            return self.parse_if_stmt(tokens, current_pos)
+        elif tokens[current_pos].token_type == TT.PRINT:
             # Consume the PRINT token.
             current_pos += 1
             return self.parse_print_stmt(tokens, current_pos)
@@ -71,6 +75,22 @@ class Parser:
             return BlockStmt(block), current_pos
         else:
             return self.parse_expr_stmt(tokens, current_pos)
+
+    def parse_if_stmt(
+        self,
+        tokens: list[Token],
+        current_pos: int,
+    ) -> tuple[Stmt, int]:
+        _, current_pos = self.consume(tokens, current_pos, TT.LEFT_PAREN, "Expect '(' after 'if'.");
+        condition, current_pos = self.parse_expression(tokens, current_pos)
+        _, current_pos = self.consume(tokens, current_pos, TT.RIGHT_PAREN, "Expect ')' after if condition.");
+        then_stmt, current_pos = self.parse_stmt(tokens, current_pos)
+        else_stmt = None
+        if tokens[current_pos].token_type == TT.ELSE:
+            # Consume the ELSE token.
+            current_pos += 1
+            else_stmt, current_pos = self.parse_stmt(tokens, current_pos)
+        return IfStmt(condition, then_stmt, else_stmt), current_pos
 
     def parse_expr_stmt(
         self,
