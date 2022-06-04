@@ -1,0 +1,5 @@
+if (true) {
+    print "okay";
+} else {
+    print "nope";
+}
