@@ -106,14 +106,74 @@ class Parser:
             current_pos += 1
             block, current_pos = self.parse_block(tokens, current_pos)
             return BlockStmt(block), current_pos
+        elif tokens[current_pos].token_type == TT.FOR:
+            # Consume the for token.
+            current_pos += 1
+            return self.parse_for_stmt(tokens, current_pos)
         else:
             return self.parse_expr_stmt(tokens, current_pos)
+
+    def parse_for_stmt(
+        self,
+        tokens: list[Token],
+        current_pos: int,
+    ) -> tuple[Stmt, int]:
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.LEFT_PAREN,
+            "Expect '(' after 'for'.",
+        )
+        initializer: Stmt | None
+        if tokens[current_pos].token_type == TT.SEMICOLON:
+            # Consume the semicolon
+            current_pos += 1
+            initializer = None
+        elif tokens[current_pos].token_type == TT.VAR:
+            # Consume the var keyword
+            current_pos += 1
+            initializer, current_pos = self.parse_var_declaration(tokens, current_pos)
+        else:
+            initializer, current_pos = self.parse_expr_stmt(tokens, current_pos)
+
+        condition: Expr | None = None
+        if tokens[current_pos].token_type != TT.SEMICOLON:
+            condition, current_pos = self.parse_expression(tokens, current_pos)
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.SEMICOLON,
+            "Expect ';' after loop condition."
+        )
+
+        increment: Expr | None = None
+        if tokens[current_pos].token_type != TT.RIGHT_PAREN:
+            increment, current_pos = self.parse_expression(tokens, current_pos)
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.RIGHT_PAREN,
+            "Expect ')' after for clauses."
+        )
+
+        body, current_pos = self.parse_stmt(tokens, current_pos)
+
+        # Desugar
+        if increment:
+            body = BlockStmt([body, ExprStmt(increment)])
+        if condition is not None:
+            body = WhileStmt(condition, body)
+        else:
+            body = WhileStmt(Literal(True), body)
+        if initializer:
+            body = BlockStmt([initializer, body])
+        return body, current_pos
 
     def parse_if_stmt(
         self,
         tokens: list[Token],
         current_pos: int,
-    ) -> tuple[Stmt, int]:
+    ) -> tuple[IfStmt, int]:
         _, current_pos = self.consume(
             tokens,
             current_pos,
