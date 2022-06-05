@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Any
 
 from ._token import Token, TokenType, keyword_map
@@ -66,16 +65,26 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
     c = source[current_pos]
     current_pos += 1
 
-    if c == '(': token_type = TokenType.LEFT_PAREN
-    elif c == ')': token_type = TokenType.RIGHT_PAREN
-    elif c == '{': token_type = TokenType.LEFT_BRACE
-    elif c == '}': token_type = TokenType.RIGHT_BRACE
-    elif c == ',': token_type = TokenType.COMMA
-    elif c == '.': token_type = TokenType.DOT
-    elif c == '-': token_type = TokenType.MINUS
-    elif c == '+': token_type = TokenType.PLUS
-    elif c == ';': token_type = TokenType.SEMICOLON
-    elif c == '*': token_type = TokenType.STAR
+    if c == '(':
+        token_type = TokenType.LEFT_PAREN
+    elif c == ')':
+        token_type = TokenType.RIGHT_PAREN
+    elif c == '{':
+        token_type = TokenType.LEFT_BRACE
+    elif c == '}':
+        token_type = TokenType.RIGHT_BRACE
+    elif c == ',':
+        token_type = TokenType.COMMA
+    elif c == '.':
+        token_type = TokenType.DOT
+    elif c == '-':
+        token_type = TokenType.MINUS
+    elif c == '+':
+        token_type = TokenType.PLUS
+    elif c == ';':
+        token_type = TokenType.SEMICOLON
+    elif c == '*':
+        token_type = TokenType.STAR
     elif c == '!':
         if current_pos < len(source) and source[current_pos] == '=':
             current_pos += 1

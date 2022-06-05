@@ -6,6 +6,7 @@ from typing import Any
 
 from ._token import Token, TokenType
 
+
 class Expr(ABC):
 
     def __iter__(self):
@@ -18,6 +19,7 @@ class Expr(ABC):
     @abstractmethod
     def __str__(self):
         ...
+
 
 @dataclass
 class Assignment(Expr):
@@ -37,12 +39,14 @@ class Binary(Expr):
     def __str__(self):
         return f'({self.operator.lexeme} {self.left} {self.right})'
 
+
 @dataclass
 class Grouping(Expr):
     expression: Expr
 
     def __str__(self):
         return f'(group {self.expression})'
+
 
 @dataclass
 class Literal(Expr):
@@ -54,6 +58,7 @@ class Literal(Expr):
         else:
             return str(self.value)
 
+
 @dataclass
 class Logical(Expr):
     left: Expr
@@ -63,6 +68,7 @@ class Logical(Expr):
     def __str__(self):
         return f'({self.operator.lexeme} {self.left} {self.right})'
 
+
 @dataclass
 class Unary(Expr):
     operator: Token
@@ -71,12 +77,14 @@ class Unary(Expr):
     def __str__(self):
         return f'({self.operator.lexeme} {self.right})'
 
+
 @dataclass
 class Variable(Expr):
     token: Token
 
     def __str__(self):
         return self.token.lexeme
+
 
 if __name__ == "__main__":
     print(

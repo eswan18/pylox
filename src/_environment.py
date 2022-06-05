@@ -19,7 +19,7 @@ class Environment:
             # If the variable is in this environment, return its value.
             return self.values[token.lexeme]
         elif self.enclosing is not None:
-            # If this environment is enclosed by another, check that one (and its parents).
+            # If this env is enclosed by another, check that one (and its parents).
             return self.enclosing.get(token)
         else:
             raise LoxRuntimeError(token, f"Undefined variable '{name}'.")
@@ -30,7 +30,7 @@ class Environment:
             # If the variable is in this environment, update it here.
             self.values[name] = value
         elif self.enclosing is not None:
-            # If this environment is enclosed by another, check that one (and its parents).
+            # Recurse up the stack trying to find an env where the variable is defined.
             self.enclosing.assign(token, value)
         else:
             raise LoxRuntimeError(token, "Undefined variable '{name}'.")

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from ._token import Token, TokenType
+
 
 class LoxError(Exception):
     def __init__(self, return_code: int):
         self.return_code = return_code
+
 
 class LoxParseError(Exception):
     def __init__(self, token: Token, msg: str):
@@ -19,6 +19,7 @@ class LoxParseError(Exception):
         else:
             location = f"'{self.token.lexeme}'"
         return f"[line {self.token.line_num}] Parse Error at {location}. {self.msg}"
+
 
 class LoxRuntimeError(Exception):
     def __init__(self, token: Token, msg: str):

@@ -46,13 +46,23 @@ class Parser:
         tokens: list[Token],
         current_pos: int,
     ) -> tuple[Stmt, int]:
-        name_token, current_pos = self.consume(tokens, current_pos, TT.IDENTIFIER, "Expect variable name.")
+        name_token, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.IDENTIFIER,
+            "Expect variable name.",
+        )
         initializer = None
         if tokens[current_pos].token_type == TT.EQUAL:
             # Consume the EQUAL token.
             current_pos += 1
             initializer, current_pos = self.parse_expression(tokens, current_pos)
-        _, current_pos = self.consume(tokens, current_pos, TT.SEMICOLON, "Expect ';' after variable declaration.")
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.SEMICOLON,
+            "Expect ';' after variable declaration.",
+        )
         return VarStmt(name_token, initializer), current_pos
 
     def parse_stmt(
@@ -81,9 +91,19 @@ class Parser:
         tokens: list[Token],
         current_pos: int,
     ) -> tuple[Stmt, int]:
-        _, current_pos = self.consume(tokens, current_pos, TT.LEFT_PAREN, "Expect '(' after 'if'.")
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.LEFT_PAREN,
+            "Expect '(' after 'if'.",
+        )
         condition, current_pos = self.parse_expression(tokens, current_pos)
-        _, current_pos = self.consume(tokens, current_pos, TT.RIGHT_PAREN, "Expect ')' after if condition.")
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.RIGHT_PAREN,
+            "Expect ')' after if condition."
+        )
         then_stmt, current_pos = self.parse_stmt(tokens, current_pos)
         else_stmt = None
         if tokens[current_pos].token_type == TT.ELSE:
@@ -98,7 +118,12 @@ class Parser:
         current_pos: int
     ) -> tuple[Stmt, int]:
         expr, current_pos = self.parse_expression(tokens, current_pos)
-        _, current_pos = self.consume(tokens, current_pos, TT.SEMICOLON, "Expect ';' after expression.")
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.SEMICOLON,
+            "Expect ';' after expression.",
+        )
         return ExprStmt(expr), current_pos
 
     def parse_block(
@@ -126,7 +151,12 @@ class Parser:
         current_pos: int
     ) -> tuple[Stmt, int]:
         expr, current_pos = self.parse_expression(tokens, current_pos)
-        _, current_pos = self.consume(tokens, current_pos, TT.SEMICOLON, "Expect ';' after value.")
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.SEMICOLON,
+            "Expect ';' after value.",
+        )
         return PrintStmt(expr), current_pos
 
     def parse_expression(
@@ -151,8 +181,12 @@ class Parser:
             if isinstance(expr, Variable):
                 return Assignment(expr.token, value), current_pos
             else:
-                # Note that we don't *raise* the error, halting parsing; we just raise it later.
-                self.errors.append(LoxParseError(tokens[equals_pos], "Invalid assignment target."))
+                # Note that we don't *raise* errors in parsing, halting immediately;
+                # instead we finish parsing everything and display all the errors we
+                # find at once.
+                self.errors.append(
+                    LoxParseError(tokens[equals_pos], "Invalid assignment target.")
+                )
                 return expr, current_pos
         else:
             # If this is not an assignment expression.
@@ -300,10 +334,15 @@ class Parser:
             return current_pos
 
         current_pos += 1
+        # These tokens generally begin statements. The interpreter should resync if it
+        # hits one.
+        resync_tokens = (
+            TT.CLASS, TT.FUN, TT.VAR, TT.FOR, TT.IF, TT.WHILE, TT.PRINT, TT.RETURN
+        )
         while tokens[current_pos].token_type != TT.EOF:
             if tokens[current_pos-1] == TT.SEMICOLON:
                 return current_pos
-            if tokens[current_pos].token_type in (TT.CLASS, TT.FUN, TT.VAR, TT.FOR, TT.IF, TT.WHILE, TT.PRINT, TT.RETURN):
+            if tokens[current_pos].token_type in resync_tokens:
                 return current_pos
             current_pos += 1
         return current_pos

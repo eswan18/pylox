@@ -73,7 +73,7 @@ class Interpreter:
             case Assignment():
                 return self.eval_assignment(expr)
             case Variable(token):
-                # Note that this doesn't delegate to a function; simple enough to do here.
+                # This doesn't delegate to a function; it's simple enough to do here.
                 return self.environment.get(token)
             case _:
                 raise RuntimeError
@@ -139,13 +139,16 @@ class Interpreter:
                 check_operands_are_numbers(operator, left, right)
                 return cast(float, left) * cast(float, right)
             case TT.PLUS:
-                # Trickier because we support numeric addition as well as string concatentation.
+                # Trickier because we support numeric addition as well as string
+                # concatentation.
                 if isinstance(left, (float, int)) and isinstance(right, (float, int)):
                     return cast(float, left) + cast(float, right)
                 elif isinstance(left, str) and isinstance(right, str):
                     return cast(str, left) + cast(str, right)
                 else:
-                    raise LoxRuntimeError(operator, 'Operands must be two numbers or two strings')
+                    raise LoxRuntimeError(
+                        operator, 'Operands must be two numbers or two strings'
+                    )
             case _:
                 raise RuntimeError
 
