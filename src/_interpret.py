@@ -1,7 +1,7 @@
 from typing import cast
 
 from ._expr import Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment
-from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, BlockStmt
+from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, WhileStmt, BlockStmt
 from ._environment import Environment
 from ._errors import LoxRuntimeError
 from ._token import Token
@@ -33,6 +33,11 @@ class Interpreter:
             case VarStmt(token, initializer):
                 value = self.eval_expr(initializer) if initializer is not None else None
                 self.environment.define(token.lexeme, value)
+            case WhileStmt(condition, body):
+                should_loop = self.eval_expr(condition)
+                while should_loop:
+                    self.execute(body)
+                    should_loop = self.eval_expr(condition)
             case BlockStmt(statements):
                 self.execute_block(statements, Environment(enclosing=self.environment))
             case IfStmt():

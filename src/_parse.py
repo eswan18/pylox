@@ -1,6 +1,6 @@
 from ._token import Token
 from ._expr import Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment
-from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, BlockStmt
+from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, WhileStmt, VarStmt, BlockStmt
 from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
 from ._token import TokenType as TT
@@ -63,6 +63,27 @@ class Parser:
         )
         return VarStmt(name_token, initializer), current_pos
 
+    def parse_while_stmt(
+        self,
+        tokens: list[Token],
+        current_pos: int,
+    ) -> tuple[WhileStmt, int]:
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.LEFT_PAREN,
+            "Expect '(' after 'while'.",
+        )
+        condition, current_pos = self.parse_expression(tokens, current_pos)
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.RIGHT_PAREN,
+            "Expect ')' after while condition.",
+        )
+        body, current_pos = self.parse_stmt(tokens, current_pos)
+        return WhileStmt(condition, body), current_pos
+
     def parse_stmt(
         self,
         tokens: list[Token],
@@ -76,8 +97,12 @@ class Parser:
             # Consume the PRINT token.
             current_pos += 1
             return self.parse_print_stmt(tokens, current_pos)
+        elif tokens[current_pos].token_type == TT.WHILE:
+            # Consume the left brace token.
+            current_pos += 1
+            return self.parse_while_stmt(tokens, current_pos)
         elif tokens[current_pos].token_type == TT.LEFT_BRACE:
-            # Consume the LEFT BRACE token.
+            # Consume the left brace token.
             current_pos += 1
             block, current_pos = self.parse_block(tokens, current_pos)
             return BlockStmt(block), current_pos

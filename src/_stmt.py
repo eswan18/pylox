@@ -38,3 +38,9 @@ class BlockStmt(Stmt):
 class VarStmt(Stmt):
     token: Token
     initializer: Optional[Expr]
+
+
+@dataclass
+class WhileStmt(Stmt):
+    condition: Expr
+    body: Stmt
