@@ -303,8 +303,8 @@ class Parser:
             paren, current_pos = self.consume(
                 tokens,
                 current_pos,
-                expected=TT.RIGHT_PAREN,
-                msg="Expect ')' after expression."
+                TT.RIGHT_PAREN,
+                "Expect ')' after expression.",
             )
             return Grouping(expr), current_pos
         else:
@@ -314,7 +314,7 @@ class Parser:
         self,
         tokens: list[Token],
         current_pos: int,
-        expected: Token,
+        expected: TT,
         msg: str
     ) -> tuple[Token, int]:
         if tokens[current_pos].token_type == expected:
