@@ -1,5 +1,3 @@
-from typing import Optional
-
 from ._token import Token
 from ._expr import Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment
 from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, BlockStmt
@@ -18,7 +16,7 @@ class Parser:
         tokens: list[Token],
     ) -> list[Stmt]:
         current_pos = 0
-        stmts: list[Optional[Stmt]] = []
+        stmts: list[Stmt] = []
         while tokens[current_pos].token_type != TT.EOF:
             try:
                 stmt, current_pos = self.parse_declaration(tokens, current_pos)

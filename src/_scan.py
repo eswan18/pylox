@@ -41,7 +41,7 @@ def scan(source: str) -> tuple[list[Token], list[LoxScanError]]:
     return tokens, errors
 
 
-def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
+def _scan_token(source: str, start_pos: int) -> tuple[Token | None, int, int]:
     '''
     Scan the next token.
 
@@ -56,7 +56,7 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
     '''
     # We need to track not only where we started, but how far into the string we are.
     current_pos = start_pos
-    token_type: Token | None = None
+    token_type: TokenType | None = None
     token_value: Any = None
 
     n_newlines = 0
@@ -154,7 +154,6 @@ def _scan_token(source: str, start_pos: int) -> tuple[Token, int, int]:
             ):
                 current_pos += 1
             text = source[start_pos:current_pos]
-            # Names that aren't keywords must be identifiers.
             token_type = keyword_map.get(text, TokenType.IDENTIFIER)
         else:
             raise LoxScanError('Unexpected character.')

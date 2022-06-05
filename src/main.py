@@ -44,15 +44,15 @@ def run_prompt():
 def run(source: str, interpreter: Interpreter):
     tokens, scan_errors = scan(source)
     if scan_errors:
-        for error in scan_errors:
-            report(error)
+        for scan_error in scan_errors:
+            report(scan_error)
         raise LoxError(65)
 
     parser = Parser()
     statements = parser.parse(tokens)
     if len(parser.errors) >= 1:
-        for error in parser.errors:
-            report(error)
+        for parse_error in parser.errors:
+            report(parse_error)
         raise LoxError(65)
 
     runtime_error = interpreter.interpret(statements)

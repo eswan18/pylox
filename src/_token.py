@@ -21,7 +21,7 @@ KEYWORDS = (
 )
 
 token_types = [t.strip() for t in TOKEN_TYPES.split(',')]
-TokenType = Enum('TokenType', token_types)
+TokenType = Enum('TokenType', token_types)  # type: ignore
 keyword_map = {kwd: TokenType[kwd.upper()] for kwd in KEYWORDS.split()}
 
 
