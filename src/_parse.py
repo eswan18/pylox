@@ -37,6 +37,8 @@ class Parser:
         current_pos: int,
     ) -> tuple[Stmt, int]:
         if tokens[current_pos].token_type == TT.FUN:
+            # Consume the FUN token.
+            current_pos += 1
             return self.parse_function('function', tokens, current_pos)
         elif tokens[current_pos].token_type == TT.VAR:
             # Consume the VAR token.
@@ -460,7 +462,7 @@ class Parser:
             tokens,
             current_pos,
             TT.RIGHT_PAREN,
-            "Expect '(' after arguments."
+            "Expect ')' after arguments."
         )
         expr = Call(callee, paren, args)
         return expr, current_pos

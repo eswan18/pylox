@@ -3,11 +3,13 @@ from typing import cast, Final
 from ._expr import (
     Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment, Call
 )
-from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, WhileStmt, BlockStmt
+from ._stmt import (
+    Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, WhileStmt, BlockStmt, FunctionStmt
+)
 from ._environment import Environment
 from ._errors import LoxRuntimeError
 from ._token import Token
-from ._lox_callable import LoxCallableProtocol, clock
+from ._lox_callable import LoxCallableProtocol, clock, LoxFunction
 # We use it a lot, so an alias helps.
 from ._token import TokenType as TT
 
@@ -18,7 +20,7 @@ class Interpreter:
         self.globals: Final = Environment()
         self.environment = self.globals
         # Create the built-in clock function.
-        self.globals['clock'] = clock
+        self.globals.define('clock', clock)
 
     def interpret(self, statements: list[Stmt]) -> LoxRuntimeError | None:
         try:
@@ -33,6 +35,9 @@ class Interpreter:
         match stmt:
             case ExprStmt(expr):
                 self.eval_expr(expr)
+            case FunctionStmt():
+                function = LoxFunction(stmt)
+                self.environment.define(stmt.name.lexeme, function)
             case PrintStmt(expr):
                 result = self.eval_expr(expr)
                 print(stringify(result))
@@ -166,7 +171,7 @@ class Interpreter:
                 raise RuntimeError
 
     def eval_call(self, expr: Call) -> object:
-        callee = self.eval_expr(expr)
+        callee = self.eval_expr(expr.callee)
         args = [self.eval_expr(arg) for arg in expr.arguments]
         if isinstance(callee, LoxCallableProtocol):
             function: LoxCallableProtocol = callee
