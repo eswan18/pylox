@@ -1,0 +1,7 @@
+var x = 3;
+fun mergePrint(x, y) {
+    var together = x + y;
+    print together;
+}
+var a = "ok";
+mergePrint(a, "ay");
