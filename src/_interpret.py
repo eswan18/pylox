@@ -1,10 +1,13 @@
-from typing import cast
+from typing import cast, Final
 
-from ._expr import Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment
+from ._expr import (
+    Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment, Call
+)
 from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, VarStmt, WhileStmt, BlockStmt
 from ._environment import Environment
 from ._errors import LoxRuntimeError
 from ._token import Token
+from ._lox_callable import LoxCallableProtocol, clock
 # We use it a lot, so an alias helps.
 from ._token import TokenType as TT
 
@@ -12,7 +15,10 @@ from ._token import TokenType as TT
 class Interpreter:
 
     def __init__(self):
-        self.environment = Environment()
+        self.globals: Final = Environment()
+        self.environment = self.globals
+        # Create the built-in clock function.
+        self.globals['clock'] = clock
 
     def interpret(self, statements: list[Stmt]) -> LoxRuntimeError | None:
         try:
@@ -75,6 +81,8 @@ class Interpreter:
                 return self.eval_unary(expr)
             case Binary():
                 return self.eval_binary(expr)
+            case Call():
+                return self.eval_call(expr)
             case Assignment():
                 return self.eval_assignment(expr)
             case Variable(token):
@@ -156,6 +164,20 @@ class Interpreter:
                     )
             case _:
                 raise RuntimeError
+
+    def eval_call(self, expr: Call) -> object:
+        callee = self.eval_expr(expr)
+        args = [self.eval_expr(arg) for arg in expr.arguments]
+        if isinstance(callee, LoxCallableProtocol):
+            function: LoxCallableProtocol = callee
+        else:
+            raise LoxRuntimeError(expr.paren, "Can only call functions and classes.")
+        if function.arity != len(args):
+            raise LoxRuntimeError(
+                expr.paren,
+                f"Expected {function.arity} arguments but got {len(args)}.",
+            )
+        return callee.call(interpreter=self, args=args)
 
 
 def check_operands_are_numbers(operator: Token, *operands: object) -> None:

@@ -2,7 +2,9 @@ from ._token import Token
 from ._expr import (
     Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment, Call
 )
-from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, WhileStmt, VarStmt, BlockStmt
+from ._stmt import (
+    Stmt, ExprStmt, IfStmt, PrintStmt, WhileStmt, VarStmt, BlockStmt, FunctionStmt
+)
 from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
 from ._token import TokenType as TT
@@ -34,7 +36,9 @@ class Parser:
         tokens: list[Token],
         current_pos: int,
     ) -> tuple[Stmt, int]:
-        if tokens[current_pos].token_type == TT.VAR:
+        if tokens[current_pos].token_type == TT.FUN:
+            return self.parse_function('function', tokens, current_pos)
+        elif tokens[current_pos].token_type == TT.VAR:
             # Consume the VAR token.
             current_pos += 1
             return self.parse_var_declaration(tokens, current_pos)
@@ -210,6 +214,57 @@ class Parser:
             "Expect ';' after expression.",
         )
         return ExprStmt(expr), current_pos
+
+    def parse_function(
+        self,
+        kind: str,
+        tokens: list[Token],
+        current_pos: int,
+    ) -> tuple[Stmt, int]:
+        name, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.IDENTIFIER,
+            f'Expect {kind} name.'
+        )
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.LEFT_PAREN,
+            f"Expect '(' after {kind} name.",
+        )
+        params: list[Token] = []
+        if tokens[current_pos].token_type != TT.RIGHT_PAREN:
+            token, current_pos = self.consume(
+                tokens,
+                current_pos,
+                TT.IDENTIFIER,
+                "Expect parameter name.",
+            )
+            params.append(token)
+            while tokens[current_pos].token_type == TT.COMMA:
+                current_pos += 1
+                token, current_pos = self.consume(
+                    tokens,
+                    current_pos,
+                    TT.IDENTIFIER,
+                    "Expect parameter name.",
+                )
+                params.append(token)
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.RIGHT_PAREN,
+            "Expect ')' after parameters.",
+        )
+        _, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.LEFT_BRACE,
+            "Expect '{' before " + kind + " body.",
+        )
+        body, current_pos = self.parse_block(tokens, current_pos)
+        return FunctionStmt(name, params, body), current_pos
 
     def parse_block(
         self,

@@ -18,6 +18,13 @@ class ExprStmt(Stmt):
 
 
 @dataclass
+class FunctionStmt(Stmt):
+    name: Token
+    params: list[Token]
+    body: list[Stmt]
+
+
+@dataclass
 class IfStmt(Stmt):
     condition: Expr
     then_branch: Stmt
