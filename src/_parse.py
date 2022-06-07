@@ -1,5 +1,7 @@
 from ._token import Token
-from ._expr import Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment
+from ._expr import (
+    Expr, Binary, Grouping, Literal, Logical, Unary, Variable, Assignment, Call
+)
 from ._stmt import Stmt, ExprStmt, IfStmt, PrintStmt, WhileStmt, VarStmt, BlockStmt
 from ._errors import LoxParseError
 # We're going to use this a lot so an alias helps.
@@ -365,7 +367,48 @@ class Parser:
             right, current_pos = self.parse_unary(tokens, current_pos)
             return Unary(operator, right), current_pos
         else:
-            return self.parse_primary(tokens, current_pos)
+            return self.parse_call(tokens, current_pos)
+
+    def parse_call(
+        self,
+        tokens: list[Token],
+        current_pos: int,
+    ) -> tuple[Expr, int]:
+        expr, current_pos = self.parse_primary(tokens, current_pos)
+        while True:
+            if tokens[current_pos].token_type == TT.LEFT_PAREN:
+                current_pos += 1
+                expr, current_pos = self.finish_parsing_call(expr, tokens, current_pos)
+            else:
+                break
+        return expr, current_pos
+
+    def finish_parsing_call(
+        self,
+        callee: Expr,
+        tokens: list[Token],
+        current_pos: int
+    ) -> tuple[Expr, int]:
+        args: list[Expr] = []
+        if tokens[current_pos].token_type != TT.RIGHT_PAREN:
+            if len(args) >= 255:
+                self.errors.append(
+                    LoxParseError(tokens[current_pos], "Can't have more than 255 args.")
+                )
+            arg, current_pos = self.parse_expression(tokens, current_pos)
+            args.append(arg)
+            while tokens[current_pos].token_type == TT.COMMA:
+                current_pos += 1
+                arg, current_pos = self.parse_expression(tokens, current_pos)
+                args.append(arg)
+        paren, current_pos = self.consume(
+            tokens,
+            current_pos,
+            TT.RIGHT_PAREN,
+            "Expect '(' after arguments."
+        )
+        expr = Call(callee, paren, args)
+        return expr, current_pos
 
     def parse_primary(
         self,

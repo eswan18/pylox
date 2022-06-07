@@ -41,6 +41,15 @@ class Binary(Expr):
 
 
 @dataclass
+class Call(Expr):
+    callee: Expr
+    paren: Token
+    arguments: list[Expr]
+
+    def __str__(self):
+        return '<function>'
+
+@dataclass
 class Grouping(Expr):
     expression: Expr
 
